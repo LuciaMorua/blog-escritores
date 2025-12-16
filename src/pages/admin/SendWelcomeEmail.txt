@@ -1,0 +1,244 @@
+// src/pages/admin/SendWelcomeEmail.jsx
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import emailjs from '@emailjs/browser';
+import { toast } from 'sonner';
+import Layout from '../../components/layout/Layout';
+import myContext from '../../context/data/myContext';
+import { auth, fireDb } from '../../firebase/FirebaseConfig';
+
+function SendWelcomeEmail() {
+  const context = useContext(myContext);
+  const { mode } = context;
+  const navigate = useNavigate();
+
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [formData, setFormData] = useState({ 
+    name: '',
+    email: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  // Verificar si el usuario es admin
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        
+        try {
+          // Verificar rol de admin
+          const docRef = doc(fireDb, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            const adminStatus = userData.isAdmin === true || userData.role === "admin";
+            setIsAdmin(adminStatus);
+            
+            // Si no es admin, redirigir
+            if (!adminStatus) {
+              toast.error('No tienes permisos para acceder a esta página');
+              navigate('/dashboard');
+            }
+          } else {
+            navigate('/dashboard');
+          }
+        } catch (error) {
+          console.error('Error al verificar permisos:', error);
+          navigate('/dashboard');
+        }
+      } else {
+        navigate('/');
+      }
+      
+      setCheckingAuth(false);
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // 👇 REEMPLAZA ESTOS VALORES CON LOS TUYOS DE EMAILJS
+      await emailjs.send(
+        'service_y2cozxk',        // 👈 Tu Service ID
+        'template_hlmp9ih',       // 👈 Tu Template ID
+        {
+          name: formData.name,
+          email: formData.email
+        },
+        'oxhdHFl8-nH924hR1'          // 👈 Tu Public Key
+      );
+
+      toast.success(`Email de bienvenida enviado a ${formData.email}`);
+      
+      // Limpiar formulario
+      setFormData({ name: '', email: '' });
+    } catch (error) {
+      console.error('Error al enviar email:', error);
+      toast.error('Error al enviar el email. Verifica los datos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mostrar loading mientras verifica autenticación
+  if (checkingAuth) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Si no es admin, no renderizar (ya redirigió)
+  if (!isAdmin) {
+    return null;
+  }
+
+  return (
+    <Layout>
+      <div className="py-10 px-4 max-w-2xl mx-auto">
+        <div className="mb-8">
+          <h1 
+            className="text-3xl font-bold mb-2"
+            style={{ color: mode === 'dark' ? 'white' : 'black' }}
+          >
+            Enviar Email de Bienvenida
+          </h1>
+          <p
+            className="text-sm"
+            style={{ color: mode === 'dark' ? 'rgb(156,163,175)' : 'rgb(107,114,128)' }}
+          >
+            Envía un email de bienvenida a los usuarios que hayas creado en Firebase
+          </p>
+        </div>
+
+        <form 
+          onSubmit={handleSend} 
+          className="space-y-6 p-6 rounded-lg"
+          style={{
+            background: mode === 'dark' ? 'rgb(30,41,59)' : 'white',
+            border: `1px solid ${mode === 'dark' ? 'rgb(51,65,85)' : 'rgb(229,231,235)'}`
+          }}
+        >
+          <div>
+            <label 
+              className="block mb-2 font-semibold"
+              style={{ color: mode === 'dark' ? 'white' : 'black' }}
+            >
+              Nombre completo del usuario:
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              placeholder="Ej: Juan Pérez"
+              className="w-full px-4 py-3 rounded-lg transition-all"
+              style={{
+                background: mode === 'dark' ? 'rgb(51,65,85)' : 'rgb(249,250,251)',
+                color: mode === 'dark' ? 'white' : 'black',
+                border: `1px solid ${mode === 'dark' ? 'rgb(75,85,99)' : 'rgb(209,213,219)'}`,
+              }}
+            />
+          </div>
+
+          <div>
+            <label 
+              className="block mb-2 font-semibold"
+              style={{ color: mode === 'dark' ? 'white' : 'black' }}
+            >
+              Email del usuario:
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              placeholder="Ej: usuario@ejemplo.com"
+              className="w-full px-4 py-3 rounded-lg transition-all"
+              style={{
+                background: mode === 'dark' ? 'rgb(51,65,85)' : 'rgb(249,250,251)',
+                color: mode === 'dark' ? 'white' : 'black',
+                border: `1px solid ${mode === 'dark' ? 'rgb(75,85,99)' : 'rgb(209,213,219)'}`,
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-lg font-semibold transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: mode === 'dark' ? 'rgb(219,39,119)' : 'rgb(236,72,153)',
+              color: 'white',
+            }}
+          >
+            {loading ? 'Enviando...' : '✉️ Enviar Email de Bienvenida'}
+          </button>
+        </form>
+
+        {/* Información adicional */}
+        <div 
+          className="mt-6 p-4 rounded-lg"
+          style={{
+            background: mode === 'dark' ? 'rgb(30,58,138)' : 'rgb(239,246,255)',
+            border: `1px solid ${mode === 'dark' ? 'rgb(37,99,235)' : 'rgb(191,219,254)'}`,
+          }}
+        >
+          <p 
+            className="text-sm"
+            style={{ color: mode === 'dark' ? 'rgb(191,219,254)' : 'rgb(30,64,175)' }}
+          >
+            <strong>📌 Instrucciones:</strong>
+            <br />
+            1. Crea el usuario en Firebase Console con un email real
+            <br />
+            2. Guarda sus datos en Firestore (colección "users")
+            <br />
+            3. Ingresa aquí el nombre y email del usuario
+            <br />
+            4. El usuario recibirá un email de bienvenida a Escritores Tucumanos
+          </p>
+        </div>
+
+        {/* Botón para volver */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-6 py-2 rounded-lg font-semibold transition-all hover:opacity-90"
+            style={{
+              background: mode === 'dark' ? 'rgb(51,65,85)' : 'rgb(229,231,235)',
+              color: mode === 'dark' ? 'white' : 'black',
+            }}
+          >
+            ← Volver al Dashboard
+          </button>
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
+export default SendWelcomeEmail;
