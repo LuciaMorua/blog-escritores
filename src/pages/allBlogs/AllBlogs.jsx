@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import Layout from '../../components/layout/Layout';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { fireDb } from '../../firebase/FirebaseConfig';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -17,22 +17,22 @@ function AllBlogs() {
   useEffect(() => {
     const fetchWriters = async () => {
       try {
-        // Obtener solo usuarios que sean escritores
-        const q = query(
-          collection(fireDb, 'users'),
-          where('role', '==', 'writer')
-        );
-        
-        const querySnapshot = await getDocs(q);
+        // Obtener TODOS los usuarios y filtrar en el cliente
+        const querySnapshot = await getDocs(collection(fireDb, 'users'));
         const writersArray = [];
 
         querySnapshot.forEach((doc) => {
-          writersArray.push({
-            id: doc.id,
-            ...doc.data()
-          });
+          const data = doc.data();
+          // Filtrar solo escritores
+          if (data.role === 'writer') {
+            writersArray.push({
+              id: doc.id,
+              ...data
+            });
+          }
         });
 
+        console.log('✅ Escritores cargados:', writersArray.length);
         setWriters(writersArray);
       } catch (error) {
         console.error('Error al obtener escritores:', error);
