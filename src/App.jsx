@@ -23,6 +23,8 @@ import AboutPage from "./pages/AboutPage/AboutPage"
 import Loader from "./components/loader/Loader"
 import LoaderController from "./components/loader/LoaderController"
 import WhatsAppFloat from "./components/WhatsAppFloat"
+import ResetPassword from "./pages/auth/resetpassword"
+
 
 export const ProtectedRouteForAdmin = ({ children }) => {
   const admin = JSON.parse(localStorage.getItem("admin"))
@@ -50,6 +52,8 @@ function App() {
           <Route path="/writer/:id" element={<WriterProfile />} />
           <Route path="/contacto" element={<ContactPage />} />
           <Route path="/nosotros" element={<AboutPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
 
           <Route
             path="/dashboard"
