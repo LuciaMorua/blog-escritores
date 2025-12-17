@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, storage, fireDb } from "../../../firebase/FirebaseConfig";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import Layout from "../../../components/layout/Layout";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -29,43 +29,30 @@ function EditProfile() {
     const loadProfileData = async () => {
       try {
         const user = auth.currentUser;
-        if (!user) {
-          toast.error('Debes iniciar sesión');
-          navigate('/adminlogin');
-          return;
-        }
-
-        // Obtener datos de Firestore (fuente principal de verdad)
-        const docRef = doc(fireDb, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          console.log('📄 Datos cargados de Firestore:', data);
-          
-          setFormData({
-            displayName: data.displayName || data.name || user.displayName || "",
-            email: user.email || "",
-            provincia: data.provincia || "",
-            pais: data.pais || "",
-            bio: data.bio || "",
-          });
-          
-          // Usar photoURL de Firestore (más confiable)
-          setPhotoPreview(data.photoURL || user.photoURL || "");
-        } else {
-          // Si no existe el documento, usar datos de Auth
-          setFormData({
+        if (user) {
+          setFormData(prev => ({
+            ...prev,
             displayName: user.displayName || "",
             email: user.email || "",
-            provincia: "",
-            pais: "",
-            bio: "",
-          });
+          }));
           setPhotoPreview(user.photoURL || "");
+
+          // Obtener datos adicionales de Firestore
+          const docRef = doc(fireDb, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setFormData(prev => ({
+              ...prev,
+              provincia: data.provincia || "",
+              pais: data.pais || "",
+              bio: data.bio || "",
+            }));
+          }
         }
       } catch (error) {
-        console.error('❌ Error al cargar perfil:', error);
+        console.error('Error al cargar perfil:', error);
         toast.error('Error al cargar los datos del perfil');
       } finally {
         setLoading(false);
@@ -73,7 +60,7 @@ function EditProfile() {
     };
 
     loadProfileData();
-  }, [navigate]);
+  }, []);
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -84,8 +71,8 @@ function EditProfile() {
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) { // Aumentado a 5MB
-        toast.error('La foto no debe superar los 5MB');
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('La foto no debe superar los 2MB');
         return;
       }
 
@@ -119,81 +106,43 @@ function EditProfile() {
 
     try {
       const user = auth.currentUser;
-      if (!user) {
-        toast.error('No hay usuario autenticado');
-        return;
-      }
-
       let photoURL = photoPreview;
 
-      // ===== PASO 1: Subir foto si hay una nueva =====
+      // Subir foto si hay una nueva
       if (photoFile) {
-        console.log('📤 Subiendo nueva foto...');
         const timestamp = Date.now();
-        const fileName = `profile-photos/${user.uid}/${timestamp}-${photoFile.name}`;
+        const fileName = `profile-photos/${user.uid}-${timestamp}`;
         const storageRef = ref(storage, fileName);
 
         await uploadBytes(storageRef, photoFile);
         photoURL = await getDownloadURL(storageRef);
-        
-        console.log('✅ Foto subida. URL:', photoURL);
         toast.success('Foto subida correctamente');
       }
 
-      // ===== PASO 2: Actualizar Firebase Auth =====
-      console.log('🔄 Actualizando perfil en Auth...');
+      // Actualizar perfil en Firebase Auth
       await updateProfile(user, {
         displayName: formData.displayName,
         photoURL: photoURL
       });
-      console.log('✅ Auth actualizado');
 
-      // ===== PASO 3: Actualizar Firestore (CRÍTICO) =====
-      console.log('💾 Guardando en Firestore...');
-      const userDocRef = doc(fireDb, "users", user.uid);
-      
-      // USAR updateDoc en lugar de setDoc para asegurar la actualización
-      await updateDoc(userDocRef, {
+      // Guardar datos adicionales en Firestore
+      await setDoc(doc(fireDb, "users", user.uid), {
         displayName: formData.displayName,
-        name: formData.displayName, // También actualizar 'name' para compatibilidad
+        email: formData.email,
         provincia: formData.provincia,
         pais: formData.pais,
         bio: formData.bio,
-        photoURL: photoURL, // ⭐ CRÍTICO: Guardar la URL de la foto
+        photoURL: photoURL,
         updatedAt: new Date()
-      });
-      
-      console.log('✅ Firestore actualizado correctamente');
-      console.log('📸 photoURL guardada:', photoURL);
+      }, { merge: true });
 
-      // ===== PASO 4: Verificar que se guardó correctamente =====
-      const verifyDoc = await getDoc(userDocRef);
-      if (verifyDoc.exists()) {
-        const savedData = verifyDoc.data();
-        console.log('✅ Verificación - Datos guardados:', savedData);
-        console.log('✅ photoURL verificada:', savedData.photoURL);
-      }
-
-      toast.success('✅ Perfil actualizado correctamente');
+      toast.success('Perfil actualizado correctamente');
       setPhotoFile(null);
-      
-      // Pequeño delay para que se vea el toast antes de navegar
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
+      navigate('/dashboard');
 
     } catch (error) {
-      console.error('❌ Error completo:', error);
-      console.error('Código:', error.code);
-      console.error('Mensaje:', error.message);
-      
-      if (error.code === 'permission-denied') {
-        toast.error('Error de permisos. Verifica las reglas de Firestore y Storage');
-      } else if (error.code === 'storage/unauthorized') {
-        toast.error('No tienes permiso para subir archivos. Verifica las reglas de Storage');
-      } else {
-        toast.error('Error al actualizar perfil: ' + error.message);
-      }
+      console.error('Error al actualizar perfil:', error);
+      toast.error('Error al actualizar perfil');
     } finally {
       setSaving(false);
     }
@@ -226,64 +175,6 @@ function EditProfile() {
             onSubmit={handleSubmit} 
             className="space-y-6 p-6 rounded-lg bg-white border border-green-200 shadow-lg"
           >
-            {/* Foto de perfil - MOVIDO AL PRINCIPIO */}
-            <div>
-              <label className="block mb-2 font-semibold text-green-900">
-                Foto de perfil
-              </label>
-
-              <input
-                id="photo-input"
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                disabled={saving}
-                className="hidden"
-              />
-
-              <div className="flex items-center gap-6">
-                {/* Preview de la foto */}
-                <div className="flex-shrink-0">
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt="Preview"
-                      className="w-32 h-32 object-cover rounded-full border-4 border-green-500 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-32 h-32 rounded-full flex items-center justify-center border-4 border-green-500 shadow-lg bg-gradient-to-br from-green-600 to-amber-600">
-                      <span className="text-5xl font-bold text-white">
-                        {formData.displayName ? formData.displayName.charAt(0).toUpperCase() : '?'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Botón y info */}
-                <div className="flex-1">
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('photo-input').click()}
-                    disabled={saving}
-                    className="w-full px-4 py-3 rounded-lg border-2 border-dashed font-semibold transition-all hover:bg-green-100 disabled:opacity-50 bg-green-50 text-green-900 border-green-300 hover:border-green-500"
-                  >
-                    📷 Cambiar foto (máx. 5MB)
-                  </button>
-
-                  {photoFile && (
-                    <div className="mt-3 px-4 py-3 rounded-lg bg-amber-50 border border-amber-300">
-                      <p className="text-sm font-semibold text-amber-900">
-                        ✓ Nueva foto seleccionada:
-                      </p>
-                      <p className="text-xs text-amber-700">
-                        📎 {photoFile.name} ({(photoFile.size / 1024).toFixed(2)} KB)
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
             {/* Nombre */}
             <div>
               <label className="block mb-2 font-semibold text-green-900">
@@ -364,6 +255,53 @@ function EditProfile() {
               />
             </div>
 
+            {/* Foto de perfil */}
+            <div>
+              <label className="block mb-2 font-semibold text-green-900">
+                Foto de perfil
+              </label>
+
+              <input
+                id="photo-input"
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                disabled={saving}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => document.getElementById('photo-input').click()}
+                disabled={saving}
+                className="w-full px-4 py-3 rounded-lg border-2 border-dashed font-semibold transition-all hover:bg-green-100 disabled:opacity-50 bg-green-50 text-green-900 border-green-300 hover:border-green-500"
+              >
+                📁 Seleccionar foto (máx. 2MB)
+              </button>
+
+              {photoFile && (
+                <div className="mt-3 px-4 py-3 rounded-lg bg-green-50 border border-green-200">
+                  <p className="text-sm text-green-900">📎 {photoFile.name}</p>
+                  <p className="text-xs text-green-600">
+                    {(photoFile.size / 1024).toFixed(2)} KB
+                  </p>
+                </div>
+              )}
+
+              {photoPreview && (
+                <div className="mt-4">
+                  <p className="text-sm mb-3 text-green-700">
+                    Vista previa:
+                  </p>
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-full border-4 border-green-500 shadow-lg"
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Botones */}
             <div className="flex gap-4 pt-6">
               <button
@@ -391,26 +329,13 @@ function EditProfile() {
               <br />
               • Tu nombre aparecerá en todos tus artículos
               <br />
-              • La foto de perfil debe ser menor a 5MB
+              • La foto de perfil debe ser menor a 2MB
               <br />
               • Tu biografía será visible en tu perfil público
               <br />
               • El email no se puede modificar por seguridad
             </p>
           </div>
-
-          {/* Debug info en desarrollo */}
-          {import.meta.env.DEV && (
-            <div className="mt-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
-              <p className="text-xs font-mono text-yellow-900">
-                <strong>🔧 Debug Info:</strong>
-                <br />
-                UID: {auth.currentUser?.uid}
-                <br />
-                photoURL actual: {photoPreview || 'ninguna'}
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </Layout>
