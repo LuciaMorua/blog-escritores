@@ -71,8 +71,8 @@ function EditProfile() {
         return;
       }
 
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error('La foto no debe superar los 2MB');
+      if (file.size >5 * 1024 * 1024) {
+        toast.error('La foto no debe superar los 5MB');
         return;
       }
 
@@ -276,7 +276,7 @@ function EditProfile() {
                 disabled={saving}
                 className="w-full px-4 py-3 rounded-lg border-2 border-dashed font-semibold transition-all hover:bg-green-100 disabled:opacity-50 bg-green-50 text-green-900 border-green-300 hover:border-green-500"
               >
-                📁 Seleccionar foto (máx. 2MB)
+                📁 Seleccionar foto (máx. 5MB)
               </button>
 
               {photoFile && (
@@ -329,7 +329,7 @@ function EditProfile() {
               <br />
               • Tu nombre aparecerá en todos tus artículos
               <br />
-              • La foto de perfil debe ser menor a 2MB
+              • La foto de perfil debe ser menor a 5MB
               <br />
               • Tu biografía será visible en tu perfil público
               <br />
