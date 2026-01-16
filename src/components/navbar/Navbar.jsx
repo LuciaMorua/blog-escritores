@@ -16,6 +16,12 @@ export default function Navbar() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      if (user) {
+        // Toast de bienvenida que se desvanece automáticamente
+        toast.success(`¡Bienvenido, ${user.displayName || user.email?.split('@')[0] || 'Usuario'}!`, {
+          duration: 3000, // 3 segundos
+        });
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -25,7 +31,10 @@ export default function Navbar() {
     try {
       await signOut(auth);
       localStorage.removeItem("admin");
-      toast.success("Sesión cerrada correctamente");
+      // Toast de cierre de sesión que se desvanece automáticamente
+      toast.success("Sesión cerrada correctamente", {
+        duration: 3000, // 3 segundos
+      });
       setProfileMenuOpen(false);
       navigate("/");
     } catch (error) {
@@ -137,27 +146,14 @@ export default function Navbar() {
                   </div>
                 </>
               ) : (
-                /* Si NO hay usuario logueado */
-                <>
-                  <button
-                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                    className="flex items-center gap-2 rounded-full p-2 transition-colors hover:bg-green-100"
-                  >
-                    <User size={20} className="text-green-700" />
-                  </button>
-
-                  <div className={`absolute right-0 z-10 mt-2 w-48 rounded-lg shadow-lg border bg-white border-green-200 transition-all duration-300 origin-top ${profileMenuOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}>
-                    <div className="py-1">
-                      <Link
-                        to="/adminlogin"
-                        className="block px-4 py-2 text-sm transition-colors hover:bg-green-50 text-green-800"
-                        onClick={() => setProfileMenuOpen(false)}
-                      >
-                        Iniciar Sesión
-                      </Link>
-                    </div>
-                  </div>
-                </>
+                /* Si NO hay usuario logueado - Botón más visible con texto */
+                <Link
+                  to="/adminlogin"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:bg-green-100 border border-green-200 hover:border-green-400"
+                >
+                  <User size={18} className="text-green-700" />
+                  <span className="text-sm font-medium text-green-900">Iniciar Sesión</span>
+                </Link>
               )}
             </div>
 
@@ -230,8 +226,13 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <Link to="/adminlogin" className="block py-2 text-sm font-medium text-green-800 hover:text-green-700" onClick={() => setMobileMenuOpen(false)}>
-                Iniciar Sesión
+              <Link 
+                to="/adminlogin" 
+                className="flex items-center gap-2 py-2 text-sm font-medium text-green-800 hover:text-green-700" 
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <User size={18} />
+                <span>Iniciar Sesión</span>
               </Link>
             )}
           </div>
