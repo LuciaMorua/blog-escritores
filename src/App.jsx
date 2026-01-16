@@ -15,6 +15,7 @@ import AdminLogin from "./pages/admin/adminLogin/AdminLogin"
 import Dashboard from "./pages/admin/dashboard/Dashboard"
 import MyState from "./context/data/myState"
 import CreateBlog from "./pages/admin/createBlog/CreateBlog"
+import EditBlog from "./pages/admin/createBlog/EditBlog"
 import EditProfile from "./pages/admin/editProfile/EditProfile"
 import CreateWriter from "./pages/admin/CreateWriter"
 import WriterProfile from "./pages/writer/WriterProfile"
@@ -69,6 +70,15 @@ function App() {
             element={
               <ProtectedRouteForAdmin>
                 <CreateBlog />
+              </ProtectedRouteForAdmin>
+            }
+          />
+
+          <Route
+            path="/editblog/:id"
+            element={
+              <ProtectedRouteForAdmin>
+                <EditBlog />
               </ProtectedRouteForAdmin>
             }
           />

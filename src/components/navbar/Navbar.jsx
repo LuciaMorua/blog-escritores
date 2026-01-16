@@ -4,6 +4,7 @@ import { User, Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../../firebase/FirebaseConfig';
 import { toast } from 'sonner';
+import logo from "../../assets/logonuevoblog.jpeg";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -57,11 +58,11 @@ export default function Navbar() {
 
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="https://previews.123rf.com/images/vectori1/vectori11702/vectori1170201266/72208966-open-book-and-pencil-icon-stock-vector-illustration-flat-design.jpg"
+              src={logo}
               alt="Escritores Tucumanos"
               className="h-9 w-9 rounded-full shadow-md border border-green-200"
             />
-            <span className="text-xl font-semibold hidden sm:block text-green-900">
+            <span className="text-xl font-semibold hidden sm:block text-green-900" style={{ fontFamily: "'Playfair Display', serif" }}>
               Escritores Tucumanos
             </span>
           </Link>

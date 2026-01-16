@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../../../components/layout/Layout";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {  onAuthStateChanged } from "firebase/auth";
 import { auth, fireDb } from "../../../firebase/FirebaseConfig";
 import { collection, getDocs, deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 function Dashboard() {
   
+  const navigate = useNavigate();
 
   // Estados
   const [blogs, setBlogs] = useState([]);
@@ -63,6 +64,13 @@ function Dashboard() {
             id: doc.id,
             ...doc.data()
           });
+        });
+
+        // Ordenar alfabéticamente por título
+        blogsArray.sort((a, b) => {
+          const titleA = (a.title || '').toLowerCase();
+          const titleB = (b.title || '').toLowerCase();
+          return titleA.localeCompare(titleB);
         });
 
         setBlogs(blogsArray);
@@ -240,7 +248,7 @@ function Dashboard() {
                   <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span>Crear Blog</span>
+                  <span>Crear artículo</span>
                 </button>
               </Link>
 
@@ -273,7 +281,7 @@ function Dashboard() {
           {/* Tabla de artículos */}
           <div className="bg-white rounded-2xl shadow-lg border border-green-200 p-8">
             <h2 className="text-2xl font-bold mb-6 text-green-900">
-              Mis Artículos
+              Mis Artículos (ordenados alfabéticamente)
             </h2>
 
             <div className="overflow-x-auto">
@@ -285,7 +293,7 @@ function Dashboard() {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-green-900">Título</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-green-900">Categoría</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-green-900">Fecha</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-green-900">Acción</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-green-900">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -320,12 +328,20 @@ function Dashboard() {
                         </td>
                         <td className="px-4 py-3 text-green-700">{blog.date}</td>
                         <td className="px-4 py-3">
-                          <button
-                            onClick={() => handleDelete(blog.id)}
-                            className="px-4 py-2 rounded-lg font-semibold bg-red-600 hover:bg-red-700 text-white transition-all duration-300"
-                          >
-                            Eliminar
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => navigate(`/editblog/${blog.id}`)}
+                              className="px-4 py-2 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300"
+                            >
+                              ✏️ Editar
+                            </button>
+                            <button
+                              onClick={() => handleDelete(blog.id)}
+                              className="px-4 py-2 rounded-lg font-semibold bg-red-600 hover:bg-red-700 text-white transition-all duration-300"
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))

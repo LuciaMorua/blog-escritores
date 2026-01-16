@@ -1,5 +1,6 @@
 import { Facebook, Instagram, Youtube } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "../../assets/logonuevoblog.jpeg";
 
 export default function Footer() {
   return (
@@ -9,11 +10,11 @@ export default function Footer() {
 
           <Link to="/" className="flex items-center gap-3">
             <img
-              src="https://previews.123rf.com/images/vectori1/vectori11702/vectori1170201266/72208966-open-book-and-pencil-icon-stock-vector-illustration-flat-design.jpg"
+              src={logo}
               alt="Escritores Tucumanos"
               className="h-12 w-12 rounded-full shadow-md border border-green-200"
             />
-            <span className="text-xl font-semibold text-green-900 tracking-wide">
+            <span className="text-xl font-semibold text-green-900 tracking-wide" style={{ fontFamily: "'Playfair Display', serif" }}>
               Escritores Tucumanos
             </span>
           </Link>

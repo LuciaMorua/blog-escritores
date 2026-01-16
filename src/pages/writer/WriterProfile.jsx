@@ -16,17 +16,15 @@ function WriterProfile() {
   useEffect(() => {
     const fetchWriterAndBlogs = async () => {
       try {
-        // 1. Obtener datos del escritor
         const writerDoc = await getDoc(doc(fireDb, 'users', id));
         
         if (writerDoc.exists()) {
           setWriter({ id: writerDoc.id, ...writerDoc.data() });
           
-          // 2. Obtener blogs del escritor
           const blogsQuery = query(
             collection(fireDb, 'blogPost'),
             where('userId', '==', id),
-            orderBy('time', 'desc')
+            orderBy('title', 'asc')
           );
           
           const blogsSnapshot = await getDocs(blogsQuery);
