@@ -126,14 +126,6 @@ function Dashboard() {
     fetchUsers();
   }, [isAdmin]);
 
-  // Toast de bienvenida (solo al iniciar sesión)
-  useEffect(() => {
-    if (sessionStorage.getItem("justLoggedIn") === "true") {
-      toast.success("¡Bienvenido!");
-      sessionStorage.removeItem("justLoggedIn");
-    }
-  }, []);
-
   // Función para eliminar blog (con validación)
   const handleDelete = async (blogId, blogUserId) => {
     // Verificar que el usuario sea el dueño del blog O sea admin
