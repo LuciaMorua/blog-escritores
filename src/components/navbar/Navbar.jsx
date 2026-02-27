@@ -12,16 +12,10 @@ export default function Navbar() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Detectar si hay usuario logueado
+  // Detectar si hay usuario logueado (SIN TOAST AQUÍ)
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      if (user) {
-        // Toast de bienvenida que se desvanece automáticamente
-        toast.success(`¡Bienvenido, ${user.displayName || user.email?.split('@')[0] || 'Usuario'}!`, {
-          duration: 3000, // 3 segundos
-        });
-      }
     });
     return () => unsubscribe();
   }, []);
@@ -31,9 +25,8 @@ export default function Navbar() {
     try {
       await signOut(auth);
       localStorage.removeItem("admin");
-      // Toast de cierre de sesión que se desvanece automáticamente
       toast.success("Sesión cerrada correctamente", {
-        duration: 3000, // 3 segundos
+        duration: 3000,
       });
       setProfileMenuOpen(false);
       navigate("/");
