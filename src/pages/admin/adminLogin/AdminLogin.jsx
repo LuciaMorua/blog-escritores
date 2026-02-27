@@ -24,7 +24,10 @@ export default function AdminLogin() {
 
     try{
       const result = await signInWithEmailAndPassword(auth, email, password);
-      toast.success("Bienvenido")
+      
+      // Marcar que acaba de iniciar sesión (se borra al cerrar pestaña)
+      sessionStorage.setItem("justLoggedIn", "true");
+      
       localStorage.setItem("admin", JSON.stringify(result));
       navigate('/dashboard')
     } catch (error) {
