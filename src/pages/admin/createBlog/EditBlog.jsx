@@ -11,7 +11,7 @@ import { fireDb, storage, auth } from "../../../firebase/FirebaseConfig";
 import { toast } from "sonner";
 
 function EditBlog() {
-  const { id } = useParams(); // Obtener el ID del blog desde la URL
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [blog, setBlog] = useState({
@@ -31,42 +31,56 @@ function EditBlog() {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
+        const currentUser = auth.currentUser;
+        
+        if (!currentUser) {
+          toast.error('Debes iniciar sesión');
+          navigate('/adminlogin');
+          return;
+        }
+
         const blogRef = doc(fireDb, "blogPost", id);
         const blogSnap = await getDoc(blogRef);
 
-        if (blogSnap.exists()) {
-          const blogData = blogSnap.data();
-          
-          // Verificar que el usuario actual sea el autor
-          const currentUser = auth.currentUser;
-          if (currentUser && blogData.userId !== currentUser.uid) {
-            toast.error('No tienes permiso para editar este blog');
-            navigate('/dashboard');
-            return;
-          }
-
-          // Establecer los datos del blog
-          setBlog({
-            title: blogData.title || '',
-            category: blogData.category || '',
-            thumbnail: blogData.thumbnail || '',
-          });
-
-          // Cargar el contenido HTML en el editor
-          if (blogData.content) {
-            const blocksFromHTML = convertFromHTML(blogData.content);
-            const contentState = ContentState.createFromBlockArray(
-              blocksFromHTML.contentBlocks,
-              blocksFromHTML.entityMap
-            );
-            setEditorState(EditorState.createWithContent(contentState));
-          }
-
-          setImagePreview(blogData.thumbnail || '');
-        } else {
+        if (!blogSnap.exists()) {
           toast.error('Blog no encontrado');
           navigate('/dashboard');
+          return;
         }
+
+        const blogData = blogSnap.data();
+        
+        // Verificar permisos: debe ser el autor O admin
+        const userRef = doc(fireDb, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        const isAdmin = userData.isAdmin === true || userData.role === "admin" || userData.role === "Admin";
+        
+        if (blogData.userId !== currentUser.uid && !isAdmin) {
+          toast.error('No tienes permiso para editar este blog');
+          navigate('/dashboard');
+          return;
+        }
+
+        // Establecer los datos del blog
+        setBlog({
+          title: blogData.title || '',
+          category: blogData.category || '',
+          thumbnail: blogData.thumbnail || '',
+        });
+
+        // Cargar el contenido HTML en el editor
+        if (blogData.content) {
+          const blocksFromHTML = convertFromHTML(blogData.content);
+          const contentState = ContentState.createFromBlockArray(
+            blocksFromHTML.contentBlocks,
+            blocksFromHTML.entityMap
+          );
+          setEditorState(EditorState.createWithContent(contentState));
+        }
+
+        setImagePreview(blogData.thumbnail || '');
+        
       } catch (error) {
         console.error('Error al cargar el blog:', error);
         toast.error('Error al cargar el blog');
@@ -165,7 +179,7 @@ function EditBlog() {
         category: blog.category,
         content: content,
         thumbnail: thumbnailURL,
-        updatedAt: Timestamp.now(), // Agregar timestamp de actualización
+        updatedAt: Timestamp.now(),
         lastModified: new Date().toLocaleString("es-AR", {
           month: "short",
           day: "2-digit",

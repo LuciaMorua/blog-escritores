@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../../../components/layout/Layout";
 import { Link, useNavigate } from "react-router-dom";
-import {  onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth, fireDb } from "../../../firebase/FirebaseConfig";
-import { collection, getDocs, deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, getDoc, updateDoc, query, where } from "firebase/firestore";
 import { toast } from "sonner";
 
 function Dashboard() {
@@ -25,10 +25,14 @@ function Dashboard() {
   // Obtener usuario autenticado
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        navigate('/adminlogin');
+        return;
+      }
       setCurrentUser(user);
     });
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
 
   // Obtener datos del perfil desde Firestore
   useEffect(() => {
@@ -52,11 +56,19 @@ function Dashboard() {
     fetchUserProfile();
   }, [currentUser]);
 
-  // Obtener blogs de Firebase
+  // Obtener SOLO los blogs del usuario actual
   useEffect(() => {
     const fetchBlogs = async () => {
+      if (!currentUser) return;
+      
       try {
-        const querySnapshot = await getDocs(collection(fireDb, 'blogPost'));
+        // FILTRAR solo blogs del usuario actual
+        const q = query(
+          collection(fireDb, 'blogPost'),
+          where('userId', '==', currentUser.uid)
+        );
+        
+        const querySnapshot = await getDocs(q);
         const blogsArray = [];
 
         querySnapshot.forEach((doc) => {
@@ -83,7 +95,7 @@ function Dashboard() {
     };
 
     fetchBlogs();
-  }, []);
+  }, [currentUser]);
 
   // Obtener todos los usuarios (solo si es admin)
   useEffect(() => {
@@ -114,9 +126,14 @@ function Dashboard() {
     fetchUsers();
   }, [isAdmin]);
 
-
-  // Función para eliminar blog
-  const handleDelete = async (blogId) => {
+  // Función para eliminar blog (con validación)
+  const handleDelete = async (blogId, blogUserId) => {
+    // Verificar que el usuario sea el dueño del blog O sea admin
+    if (blogUserId !== currentUser.uid && !isAdmin) {
+      toast.error('No tienes permiso para eliminar este blog');
+      return;
+    }
+    
     if (window.confirm('¿Estás seguro de eliminar este artículo?')) {
       try {
         await deleteDoc(doc(fireDb, 'blogPost', blogId));
@@ -127,6 +144,17 @@ function Dashboard() {
         toast.error('Error al eliminar el blog');
       }
     }
+  };
+
+  // Función para editar blog (con validación)
+  const handleEdit = (blogId, blogUserId) => {
+    // Verificar que el usuario sea el dueño del blog O sea admin
+    if (blogUserId !== currentUser.uid && !isAdmin) {
+      toast.error('No tienes permiso para editar este blog');
+      return;
+    }
+    
+    navigate(`/editblog/${blogId}`);
   };
 
   // Convertir usuario en escritor
@@ -184,13 +212,13 @@ function Dashboard() {
               <div className="left">
                 <img 
                   className="w-40 h-40 object-cover rounded-full border-4 border-green-500 p-1 shadow-lg" 
-                  src={currentUser?.photoURL || "https://cdn.goenhance.ai/user/2024/07/12/0a2640eb-1120-42e1-8478-eb2a5c19367b_0.jpg"}
+                  src={userProfile?.photoURL || currentUser?.photoURL || "https://cdn.goenhance.ai/user/2024/07/12/0a2640eb-1120-42e1-8478-eb2a5c19367b_0.jpg"}
                   alt="profile"
                 />
               </div>
               <div className="right">
                 <h1 className="text-center font-bold text-3xl mb-2 text-green-900">
-                  {currentUser?.displayName || "Usuario"}
+                  {userProfile?.name || currentUser?.displayName || "Usuario"}
                 </h1>
                 <p className="text-center mb-3 text-green-700">
                   Bienvenido a tu panel de control
@@ -273,8 +301,6 @@ function Dashboard() {
                   </button>
                 </Link>
               )}
-
-              
             </div>
           </div>
 
@@ -330,13 +356,13 @@ function Dashboard() {
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             <button
-                              onClick={() => navigate(`/editblog/${blog.id}`)}
+                              onClick={() => handleEdit(blog.id, blog.userId)}
                               className="px-4 py-2 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300"
                             >
                               ✏️ Editar
                             </button>
                             <button
-                              onClick={() => handleDelete(blog.id)}
+                              onClick={() => handleDelete(blog.id, blog.userId)}
                               className="px-4 py-2 rounded-lg font-semibold bg-red-600 hover:bg-red-700 text-white transition-all duration-300"
                             >
                               🗑️ Eliminar
