@@ -1,4 +1,4 @@
-// src/pages/admin/SendWelcomeEmail.jsx
+
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -14,7 +14,7 @@ function SendWelcomeEmail() {
   const { mode } = context;
   const navigate = useNavigate();
 
-  const [currentUser, setCurrentUser] = useState(null);
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [formData, setFormData] = useState({ 
@@ -27,7 +27,7 @@ function SendWelcomeEmail() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser(user);
+        
         
         try {
           // Verificar rol de admin
@@ -73,15 +73,15 @@ function SendWelcomeEmail() {
     setLoading(true);
 
     try {
-      // 👇 REEMPLAZA ESTOS VALORES CON LOS TUYOS DE EMAILJS
+      
       await emailjs.send(
-        'service_y2cozxk',        // 👈 Tu Service ID
-        'template_hlmp9ih',       // 👈 Tu Template ID
+        'service_y2cozxk',        
+        'template_hlmp9ih',       
         {
           name: formData.name,
           email: formData.email
         },
-        'oxhdHFl8-nH924hR1'          // 👈 Tu Public Key
+        'oxhdHFl8-nH924hR1'          
       );
 
       toast.success(`Email de bienvenida enviado a ${formData.email}`);
@@ -96,7 +96,7 @@ function SendWelcomeEmail() {
     }
   };
 
-  // Mostrar loading mientras verifica autenticación
+ 
   if (checkingAuth) {
     return (
       <Layout>

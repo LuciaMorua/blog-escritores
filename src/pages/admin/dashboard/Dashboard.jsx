@@ -26,7 +26,7 @@ function Dashboard() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
-        navigate('/adminlogin');
+        navigate('/login');
         return;
       }
       setCurrentUser(user);

@@ -66,7 +66,7 @@ function CreateWriter() {
         }
       } else {
         toast.error('Debes iniciar sesión primero');
-        navigate('/adminlogin');
+        navigate('/login');
       }
       
       setCheckingAuth(false);

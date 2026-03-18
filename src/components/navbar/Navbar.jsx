@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
+import { User, Menu, X, LogOut, LayoutDashboard, UserPlus, LogIn } from 'lucide-react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../../firebase/FirebaseConfig';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ export default function Navbar() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Detectar si hay usuario logueado (SIN TOAST AQUÍ)
+  // Detectar si hay usuario logueado
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -84,7 +84,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="hidden md:block relative">
               {/* Si hay usuario logueado */}
               {currentUser ? (
@@ -139,14 +139,24 @@ export default function Navbar() {
                   </div>
                 </>
               ) : (
-                /* Si NO hay usuario logueado - Botón más visible con texto */
-                <Link
-                  to="/adminlogin"
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:bg-green-100 border border-green-200 hover:border-green-400"
-                >
-                  <User size={18} className="text-green-700" />
-                  <span className="text-sm font-medium text-green-900">Iniciar Sesión</span>
-                </Link>
+                
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all hover:bg-green-100 border border-green-200 hover:border-green-400"
+                  >
+                    <LogIn size={18} className="text-green-700" />
+                    <span className="text-sm font-medium text-green-900">Iniciar Sesión</span>
+                  </Link>
+                  
+                  <Link
+                    to="/register"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gradient-to-r from-green-600 to-amber-600 hover:from-green-700 hover:to-amber-700 text-white shadow-md hover:shadow-lg"
+                  >
+                    <UserPlus size={18} />
+                    <span className="text-sm font-semibold">Registrarse</span>
+                  </Link>
+                </div>
               )}
             </div>
 
@@ -219,14 +229,24 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <Link 
-                to="/adminlogin" 
-                className="flex items-center gap-2 py-2 text-sm font-medium text-green-800 hover:text-green-700" 
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <User size={18} />
-                <span>Iniciar Sesión</span>
-              </Link>
+              <div className="space-y-2">
+                <Link 
+                  to="/login" 
+                  className="flex items-center gap-2 py-2 text-sm font-medium text-green-800 hover:text-green-700" 
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <LogIn size={18} />
+                  <span>Iniciar Sesión</span>
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="flex items-center gap-2 py-2 px-4 rounded-lg bg-gradient-to-r from-green-600 to-amber-600 text-white font-semibold text-sm" 
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <UserPlus size={18} />
+                  <span>Registrarse</span>
+                </Link>
+              </div>
             )}
           </div>
         </div>

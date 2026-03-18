@@ -1,8 +1,8 @@
+
 import {
   BrowserRouter as Router,
   Route,
   Routes,
-  Navigate
 } from "react-router-dom"
 import { Toaster } from "sonner"
 
@@ -11,101 +11,77 @@ import Blog from "./pages/blog/Blog"
 import AllBlogs from "./pages/allBlogs/AllBlogs"
 import NoPage from "./pages/nopage/NoPage"
 import BlogInfo from "./pages/blogInfo/BlogInfo"
-import AdminLogin from "./pages/admin/adminLogin/AdminLogin"
 import Dashboard from "./pages/admin/dashboard/Dashboard"
 import MyState from "./context/data/myState"
 import CreateBlog from "./pages/admin/createBlog/CreateBlog"
-import EditBlog from "./pages/admin/createBlog/EditBlog"
 import EditProfile from "./pages/admin/editProfile/EditProfile"
+import SendWelcomeEmail from "./pages/admin/SendWelcomeEmail"
 import CreateWriter from "./pages/admin/CreateWriter"
-import WriterProfile from "./pages/writer/WriterProfile"
-import ContactPage from "./pages/contact/ContactPage"
+import Register from "./pages/auth/Register"
+import Login from "./pages/auth/Login"
 import AboutPage from "./pages/AboutPage/AboutPage"
-import Loader from "./components/loader/Loader"
-import LoaderController from "./components/loader/LoaderController"
-import WhatsAppFloat from "./components/WhatsAppFloat"
-import ResetPassword from "./pages/auth/resetpassword"
-
+import ContactPage from "./pages/contact/ContactPage"
+import { Navigate } from "react-router-dom"
 
 export const ProtectedRouteForAdmin = ({ children }) => {
-  const admin = JSON.parse(localStorage.getItem("admin"))
-
+  const admin = JSON.parse(localStorage.getItem("admin"));
+  
   if (admin?.user?.email) {
-    return children
+    return children;
   } else {
-    return <Navigate to="/adminlogin" replace />
+    return <Navigate to="/login" replace />;
   }
-}
+};
 
 function App() {
   return (
     <MyState>
       <Router>
-        <Loader />
-        <LoaderController />
-
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/allBlogs" element={<AllBlogs />} />
           <Route path="/blogInfo/:id" element={<BlogInfo />} />
-          <Route path="/adminlogin" element={<AdminLogin />} />
-          <Route path="/writer/:id" element={<WriterProfile />} />
-          <Route path="/contacto" element={<ContactPage />} />
+          
+          {/* Rutas públicas */}
           <Route path="/nosotros" element={<AboutPage />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-
-
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRouteForAdmin>
-                <Dashboard />
-              </ProtectedRouteForAdmin>
-            }
-          />
-
-          <Route
-            path="/createblog"
-            element={
-              <ProtectedRouteForAdmin>
-                <CreateBlog />
-              </ProtectedRouteForAdmin>
-            }
-          />
-
-          <Route
-            path="/editblog/:id"
-            element={
-              <ProtectedRouteForAdmin>
-                <EditBlog />
-              </ProtectedRouteForAdmin>
-            }
-          />
-
-          <Route
-            path="/editProfile"
-            element={
-              <ProtectedRouteForAdmin>
-                <EditProfile />
-              </ProtectedRouteForAdmin>
-            }
-          />
-
-          <Route
-            path="/create-writer"
-            element={
-              <ProtectedRouteForAdmin>
-                <CreateWriter />
-              </ProtectedRouteForAdmin>
-            }
-          />
-
+          <Route path="/contacto" element={<ContactPage />} />
+          
+          {/* Rutas de autenticación */}
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          
+          {/* Rutas protegidas */}
+          <Route path="/dashboard" element={
+            <ProtectedRouteForAdmin>
+              <Dashboard />
+            </ProtectedRouteForAdmin>
+          }/>
+          <Route path="/createblog" element={
+            <ProtectedRouteForAdmin>
+              <CreateBlog />
+            </ProtectedRouteForAdmin>
+          }/>
+          <Route path="/editProfile" element={
+            <ProtectedRouteForAdmin>
+              <EditProfile />
+            </ProtectedRouteForAdmin>
+          }/>
+          <Route path="/send-welcome-email" element={
+            <ProtectedRouteForAdmin>
+              <SendWelcomeEmail />
+            </ProtectedRouteForAdmin>
+          }/>
+          <Route path="/create-writer" element={
+            <ProtectedRouteForAdmin>
+              <CreateWriter />
+            </ProtectedRouteForAdmin>
+          }/>
+          
           <Route path="/*" element={<NoPage />} />
         </Routes>
 
-        <WhatsAppFloat />
-
+        {/* Toaster global, siempre visible */}
         <Toaster position="top-right" richColors closeButton />
       </Router>
     </MyState>

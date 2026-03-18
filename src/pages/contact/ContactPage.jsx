@@ -281,8 +281,7 @@ function ContactPage() {
                 </ul>
               </div>
 
-              {/* Card de contacto directo */}
-              <div className="bg-blue-50 rounded-2xl border border-blue-200 p-6">
+                <div className="bg-blue-50 rounded-2xl border border-blue-200 p-6">
                 <h3 className="text-lg font-bold text-blue-900 mb-3">
                   💬 ¿Preferís contactarnos directamente?
                 </h3>

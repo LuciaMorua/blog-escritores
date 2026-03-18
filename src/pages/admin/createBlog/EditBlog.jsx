@@ -35,7 +35,7 @@ function EditBlog() {
         
         if (!currentUser) {
           toast.error('Debes iniciar sesión');
-          navigate('/adminlogin');
+          navigate('/login');
           return;
         }
 
