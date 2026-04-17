@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     sitemap({
       hostname: 'https://blog-escritores.vercel.app',
-      routes: [
+      dynamicRoutes: [
         '/',
         '/blog',
         '/allBlogs',
