@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
     sitemap({
-      hostname: 'https://blog-escritores.web.app',
+      hostname: 'https://blog-escritores.vercel.app',
       routes: [
         '/',
         '/blog',
