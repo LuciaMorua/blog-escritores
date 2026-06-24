@@ -23,6 +23,7 @@ import AboutPage from "./pages/AboutPage/AboutPage"
 import ContactPage from "./pages/contact/ContactPage"
 import { Navigate } from "react-router-dom"
 import WriterProfile from "./pages/writer/WriterProfile.jsx"
+import EditBlog from "./pages/admin/createBlog/EditBlog.jsx"
 
 export const ProtectedRouteForAdmin = ({ children }) => {
   const admin = JSON.parse(localStorage.getItem("admin"));
@@ -77,6 +78,11 @@ function App() {
           <Route path="/create-writer" element={
             <ProtectedRouteForAdmin>
               <CreateWriter />
+            </ProtectedRouteForAdmin>
+          }/>
+          <Route path="/editblog/:id" element={
+            <ProtectedRouteForAdmin>
+                <EditBlog />
             </ProtectedRouteForAdmin>
           }/>
           
