@@ -22,6 +22,7 @@ import Login from "./pages/auth/Login"
 import AboutPage from "./pages/AboutPage/AboutPage"
 import ContactPage from "./pages/contact/ContactPage"
 import { Navigate } from "react-router-dom"
+import WriterProfile from "./pages/writerProfile/WriterProfile" // ajustá la ruta según donde guardaste el archivo
 
 export const ProtectedRouteForAdmin = ({ children }) => {
   const admin = JSON.parse(localStorage.getItem("admin"));
@@ -46,6 +47,7 @@ function App() {
           {/* Rutas públicas */}
           <Route path="/nosotros" element={<AboutPage />} />
           <Route path="/contacto" element={<ContactPage />} />
+          <Route path="/writer/:id" element={<WriterProfile />} />
           
           {/* Rutas de autenticación */}
           <Route path="/register" element={<Register />} />
