@@ -22,7 +22,7 @@ import Login from "./pages/auth/Login"
 import AboutPage from "./pages/AboutPage/AboutPage"
 import ContactPage from "./pages/contact/ContactPage"
 import { Navigate } from "react-router-dom"
-import WriterProfile from "./pages/writerProfile/WriterProfile" // ajustá la ruta según donde guardaste el archivo
+import WriterProfile from "./pages/writer/WriterProfile.jsx"
 
 export const ProtectedRouteForAdmin = ({ children }) => {
   const admin = JSON.parse(localStorage.getItem("admin"));
